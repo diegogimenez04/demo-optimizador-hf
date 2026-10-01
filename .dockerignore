@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.log
+*.pid
+.git
+.gitignore
+P1-E1aE3
+P2-E4aE6
+starplastic.ipynb

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo Grupo de Investigación — Optimización de Procesos Industriales</title>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter, Segoe UI, Arial, Helvetica, sans-serif;color:#1e293b;background:#f8fafc;line-height:1.5}
+  header{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0e7490 100%);color:white;padding:28px 24px 20px}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px;font-weight:700}
+  header p{margin:8px 0 0;opacity:.9;max-width:900px;font-size:14px}
+  .badge{display:inline-block;margin-top:12px;background:#facc15;color:#422006;font-size:11px;font-weight:700;letter-spacing:.6px;padding:4px 10px;border-radius:999px}
+  .disclaimer{margin-top:10px;font-size:12px;opacity:.75;border-left:3px solid #38bdf8;padding-left:10px}
+  nav{position:sticky;top:0;z-index:20;background:white;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;padding:10px 16px;flex-wrap:wrap;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  nav .nav-group{display:flex;gap:8px;flex-wrap:wrap}
+  nav button{border:1px solid #cbd5e1;background:white;color:#0f172a;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+  nav button.active{background:#0f172a;color:white;border-color:#0f172a}
+  nav button.gold.active{background:#a16207;color:white;border-color:#a16207}
+  nav .sep{width:1px;height:24px;background:#e2e8f0;margin:0 4px}
+  .subnav{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+  .subnav button{border:1px solid #e2e8f0;background:#f1f5f9;color:#334155;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+  .subnav button.active{background:#2563eb;color:white;border-color:#2563eb}
+  .subnav button.gold.active{background:#ca8a04;color:white;border-color:#ca8a04}
+  main{max-width:1400px;margin:0 auto;padding:18px 16px 40px}
+  .card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card h3{margin:0 0 4px;font-size:16px}
+  .card .meta{font-size:13px;color:#64748b;margin-bottom:12px}
+  .main-view{display:none}
+  .main-view.active{display:block}
+  .scenario{display:none}
+  .scenario.active{display:block}
+  h4{margin:18px 0 8px;font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:#475569;border-bottom:1px solid #f1f5f9;padding-bottom:6px}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+  .chart-box{border:1px solid #f1f5f9;border-radius:10px;padding:8px;background:#fcfcfc;overflow:hidden}
+  .chart-box.timeline{grid-column:1/-1}
+  .metrics-grid{display:grid;grid-template-columns:360px 1fr 340px;gap:16px;align-items:start}
+  @media(max-width:1100px){.metrics-grid{grid-template-columns:1fr}}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi span{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;color:#334155}
+  .kpi span.gold{background:#fef9c3;border-color:#facc15;color:#713f12}
+  .compara-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .note{font-size:12px;color:#64748b;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 12px;margin-top:12px}
+  footer{max-width:1400px;margin:0 auto;padding:0 16px 30px;color:#94a3b8;font-size:12px;text-align:center}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#475569;margin:6px 0 10px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Optimización de Procesos Industriales — Demo Grupo de Investigación</h1>
+  <p>Demostración didáctica de planificación y secuenciación de <strong>15 órdenes de trabajo (OT1–OT15) en 5 máquinas (m1–m5)</strong> + ventana de mantenimiento. Visualización de agendas, dotación de personal y KPIs predictivos por escenario.</p>
+  <span class="badge">DEMO · DATOS SINTÉTICOS · SIN VINCULACIÓN EMPRESARIAL</span>
+  <div class="disclaimer">Ejemplo generado a partir de un proceso unificado (Casos 1 y 2) para mostrar capacidades de modelado y optimización de un grupo de investigación. Sin logos ni datos reales de empresa. Fechas ficticias feb-2023, solo a efectos de Gantt.</div>
+</header>
+
+<nav>
+  <div class="nav-group">
+    <button id="btn-caso1" class="active" onclick="showView('view-caso1')">Caso 1 — Escenarios E1 a E3 + E1.1</button>
+    <button id="btn-caso2" onclick="showView('view-caso2')">Caso 2 — Escenarios E4 a E5 + E4.1</button>
+    <button id="btn-compara" onclick="showView('view-compara')">Comparativas</button>
+    <a href="/" style="text-decoration:none"><button style="background:#2563eb;color:white;border-color:#2563eb" onclick="event.preventDefault(); window.location.href='/'">▶ Optimizador en vivo</button></a>
+  </div>
+  <div class="sep"></div>
+  <div style="font-size:12px;color:#64748b">Proceso unificado • 7 escenarios • 5 máquinas • 15 OTs · <a href="/" style="color:#2563eb">Form → Modelo</a></div>
+</nav>
+
+<main>
+  <!-- ===== CASO 1 ===== -->
+  <div id="view-caso1" class="main-view active">
+    <div class="card">
+      <h3>Caso 1 — Planificación base y variantes</h3>
+      <div class="meta">Escenarios E1 (baseline), E1.1 (optimizado — dotación estable, flujo mínimo), E2 y E3 (re-secuenciaciones). Compará agendas y KPIs.</div>
+      <div class="subnav">
+        <button id="btn-E1" class="active" onclick="showScenario('caso1','E1')">E1 — Baseline</button>
+        <button id="btn-E1_1" class="gold" onclick="showScenario('caso1','E1_1')">E1.1 — Optimizado ⭐</button>
+        <button id="btn-E2" onclick="showScenario('caso1','E2')">E2</button>
+        <button id="btn-E3" onclick="showScenario('caso1','E3')">E3</button>
+      </div>
+      <div class="kpi"><span>15 OTs</span><span>5 máquinas</span><span>Mantenimiento m5: 03/02 19:00 → 04/02 05:00</span><span class="gold">E1.1: 68 hs totales · 4hs32m/OT</span></div>
+    </div>
+
+    <!-- E1 -->
+    <div id="scenario-E1" class="scenario active">
+      <div class="card">
+        <h3>Escenario E1 — Línea base</h3>
+        <div class="meta">92,5 hs totales · 6 hs 10 m / OT · Ocupación 199 hs prod / 78,5 hs no prod</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E1" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal — dotación requerida en el tiempo</h4>
+        <div id="personnel-E1" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E1" style="height:160px"></div><div class="note">Tabla: total horizonte y flujo promedio por OT.</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- E1.1 -->
+    <div id="scenario-E1_1" class="scenario">
+      <div class="card">
+        <h3>Escenario E1.1 — Optimizado (dotación estable 3 pax)</h3>
+        <div class="meta">68 hs totales · 4 hs 32 m / OT · 199 / 5 hs · Mejor flujo y menor ociosidad</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E1_1" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal — dotación plana</h4>
+        <div id="personnel-E1_1" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E1_1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E1_1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E1_1" style="height:160px"></div><div class="note">E1.1 reduce 24,5 hs vs E1 manteniendo producción.</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- E2 -->
+    <div id="scenario-E2" class="scenario">
+      <div class="card">
+        <h3>Escenario E2 — Re-secuenciación</h3>
+        <div class="meta">74,5 hs totales · 4 hs 57 m / OT · 199 / 24,5 hs</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E2" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal</h4>
+        <div id="personnel-E2" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E2" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E2" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E2" style="height:160px"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- E3 -->
+    <div id="scenario-E3" class="scenario">
+      <div class="card">
+        <h3>Escenario E3 — Re-secuenciación alternativa</h3>
+        <div class="meta">82 hs totales · 5 hs 28 m / OT · 199 / 47 hs</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E3" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal</h4>
+        <div id="personnel-E3" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E3" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E3" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E3" style="height:160px"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CASO 2 ===== -->
+  <div id="view-caso2" class="main-view">
+    <div class="card">
+      <h3>Caso 2 — Variantes con distinto mix de carga (m2 carga ligera)</h3>
+      <div class="meta">Escenarios E4 (baseline), E5 y E4.1 (optimizado). Carga productiva total 204 hs.</div>
+      <div class="subnav">
+        <button id="btn-E4" class="active" onclick="showScenario('caso2','E4')">E4 — Baseline</button>
+        <button id="btn-E5" onclick="showScenario('caso2','E5')">E5</button>
+        <button id="btn-E4_1" class="gold" onclick="showScenario('caso2','E4_1')">E4.1 — Optimizado ⭐</button>
+      </div>
+      <div class="kpi"><span>Carga m2 solo 14,5 hs</span><span>m1 30 hs</span><span class="gold">E4.1: 72 hs totales · 4hs48m/OT</span></div>
+    </div>
+
+    <div id="scenario-E4" class="scenario active">
+      <div class="card">
+        <h3>Escenario E4 — Línea base Caso 2</h3>
+        <div class="meta">92,5 hs totales · 6 hs 10 m / OT · 204 / 73,5 hs</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E4" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal</h4>
+        <div id="personnel-E4" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E4" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E4" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E4" style="height:160px"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="scenario-E5" class="scenario">
+      <div class="card">
+        <h3>Escenario E5</h3>
+        <div class="meta">74 hs totales · 4 hs 56 m / OT · 204 / 18 hs</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E5" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal</h4>
+        <div id="personnel-E5" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E5" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E5" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E5" style="height:160px"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="scenario-E4_1" class="scenario">
+      <div class="card">
+        <h3>Escenario E4.1 — Optimizado</h3>
+        <div class="meta">72 hs totales · 4 hs 48 m / OT · 204 / 12 hs · Mejor balance</div>
+        <h4>Agenda de OTs por máquina (Gantt)</h4>
+        <div id="timeline-E4_1" class="chart-box timeline" style="height:320px"></div>
+        <h4>Agenda de Personal — dotación plana día 1</h4>
+        <div id="personnel-E4_1" style="height:300px"></div>
+        <h4>Indicadores predictivos</h4>
+        <div class="metrics-grid">
+          <div class="chart-box"><div id="donut-E4_1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="production-E4_1" style="height:340px"></div></div>
+          <div class="chart-box"><div id="table-E4_1" style="height:160px"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COMPARATIVAS ===== -->
+  <div id="view-compara" class="main-view">
+    <div class="card">
+      <h3>Comparativas planificadas — visión proceso unificado</h3>
+      <div class="meta">Compará % ocupación, tiempo total y flujo promedio. Los optimizados (E1.1 y E4.1) en dorado.</div>
+      <div class="legend"><span><span class="dot" style="background:#16a34a"></span>Prod.</span><span><span class="dot" style="background:#e5e7eb;border:1px solid #cbd5e1"></span>No prod.</span><span><span class="dot" style="background:#facc15"></span>Optimizado</span></div>
+    </div>
+
+    <div class="card">
+      <h4>Caso 1 — % Ocupación del Personal por escenario</h4>
+      <div class="compara-grid">
+        <div class="chart-box"><div id="p1-donut-E1" style="height:320px"></div></div>
+        <div class="chart-box"><div id="p1-donut-E2" style="height:320px"></div></div>
+        <div class="chart-box"><div id="p1-donut-E3" style="height:320px"></div></div>
+        <div class="chart-box" style="border:2px solid #facc15"><div id="p1-donut-E1_1" style="height:320px"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+        <div class="chart-box"><div id="p1-barchart" style="height:380px"></div></div>
+        <div class="chart-box"><div id="p1-column" style="height:380px"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4>Caso 2 — % Ocupación del Personal por escenario</h4>
+      <div class="compara-grid">
+        <div class="chart-box"><div id="p2-donut-E4" style="height:320px"></div></div>
+        <div class="chart-box"><div id="p2-donut-E5" style="height:320px"></div></div>
+        <div class="chart-box" style="border:2px solid #facc15"><div id="p2-donut-E4_1" style="height:320px"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+        <div class="chart-box"><div id="p2-barchart" style="height:380px"></div></div>
+        <div class="chart-box"><div id="p2-column" style="height:380px"></div></div>
+      </div>
+    </div>
+
+    <div class="card note">
+      <strong>Cómo leer el proceso unificado:</strong> Cada escenario resuelve el mismo set de 15 OTs con distinta secuencia y asignación máquina. Los Gantt muestran ocupación m1–m5; la curva de personal indica dotación requerida; los donuts % ocupación y las barras apiladas % en producción por máquina revelan cuellos de botella. La tabla final condensa horizonte total y flujo promedio/OT — KPI clave para el grupo de investigación.
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Demo elaborada por Grupo de Investigación — Proceso unificado (7 escenarios). Sin logos, sin datos empresariales reales. Solo fines demostrativos/académicos. &bull; Generado 2026 &bull; Charts: Google Charts
+</footer>
+
+<script>
+// ---------- Navegación ----------
+function showView(id){
+  document.querySelectorAll('.main-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='view-caso1') document.getElementById('btn-caso1').classList.add('active');
+  if(id==='view-caso2') document.getElementById('btn-caso2').classList.add('active');
+  if(id==='view-compara') document.getElementById('btn-compara').classList.add('active');
+  setTimeout(drawVisible, 80);
+}
+function showScenario(caso, esc){
+  const prefix = caso==='caso1' ? 'E' : 'E';
+  // hide all scenarios of that caso
+  const container = document.getElementById(caso==='caso1' ? 'view-caso1' : 'view-caso2');
+  container.querySelectorAll('.scenario').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scenario-'+esc).classList.add('active');
+  // subnav active
+  container.querySelectorAll('.subnav button').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('btn-'+esc);
+  if(btn) btn.classList.add('active');
+  setTimeout(()=>drawScenario(esc), 80);
+}
+
+// ---------- Datos ----------
+const prodE1=[[ 'm1', 20, 72.5,  ''],[ 'm2', 26.5, 66,  ''],[ 'm3', 32, 60.5,  ''],[ 'm4', 32.5, 60,  ''],[ 'm5', 33.5, 59,  '']];
+const prodE1_1=[[ 'm1', 20, 48,  ''],[ 'm2', 26.5, 41.5,  ''],[ 'm3', 32, 36,  ''],[ 'm4', 32.5, 35.5,  ''],[ 'm5', 33.5, 34.5,  '']];
+const prodE2=[[ 'm1', 20, 54.5,  ''],[ 'm2', 26.5, 48,  ''],[ 'm3', 32, 42.5,  ''],[ 'm4', 32.5, 42,  ''],[ 'm5', 33.5, 41,  '']];
+const prodE3=[[ 'm1', 20, 62,  ''],[ 'm2', 26.5, 55.5,  ''],[ 'm3', 32, 50,  ''],[ 'm4', 32.5, 49.5,  ''],[ 'm5', 33.5, 48.5,  '']];
+const prodE4=[[ 'm1', 30, 62.5,  ''],[ 'm2', 14.5, 78,  ''],[ 'm3', 32, 60.5,  ''],[ 'm4', 32.5, 60,  ''],[ 'm5', 33.5, 59,  '']];
+const prodE5=[[ 'm1', 30, 44,  ''],[ 'm2', 14.5, 59.5,  ''],[ 'm3', 32, 42,  ''],[ 'm4', 32.5, 41.5,  ''],[ 'm5', 33.5, 40.5,  '']];
+const prodE4_1=[[ 'm1', 30, 42,  ''],[ 'm2', 14.5, 57.5,  ''],[ 'm3', 32, 40,  ''],[ 'm4', 32.5, 39.5,  ''],[ 'm5', 33.5, 38.5,  '']];
+
+// ---------- Helpers Charts ----------
+function drawTimeline(elemId, rows){
+  var el=document.getElementById(elemId); if(!el) return;
+  var chart=new google.visualization.Timeline(el);
+  var dt=new google.visualization.DataTable();
+  dt.addColumn({type:'string',id:'Machine'});
+  dt.addColumn({type:'string',id:'OT'});
+  dt.addColumn({type:'date',id:'Start'});
+  dt.addColumn({type:'date',id:'End'});
+  dt.addRows(rows);
+  chart.draw(dt,{timeline:{showRowLabels:true},avoidOverlappingGridLines:true});
+}
+function drawPersonnelLine(elemId, rows){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=new google.visualization.DataTable();
+  data.addColumn({type:'date',id:'date'});
+  data.addColumn('number','cant personal');
+  data.addRows(rows);
+  var opts={height:300, hAxis:{scaleType:'date'}, legend:{position:'none'}, colors:['#2563eb']};
+  var chart=new google.charts.Line(el);
+  chart.draw(data, google.charts.Line.convertOptions(opts));
+}
+function drawDonut(elemId, title, prod, nonprod, width){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=google.visualization.arrayToDataTable([['Task','Hours'],['Tpo productivo',prod],['Tpo no productivo',nonprod]]);
+  var opts={title:title, pieHole:0.4, width: width||360, height:320, chartArea:{width:'82%',height:'72%'}, colors:['#16a34a','#e5e7eb'], legend:{position:'bottom', textStyle:{fontSize:11}}};
+  new google.visualization.PieChart(el).draw(data, opts);
+}
+function drawProduction(elemId, rows){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=google.visualization.arrayToDataTable([['Máq.','Tpo En Prod','Tpo inactiva',{role:'annotation'}]].concat(rows));
+  var view=new google.visualization.DataView(data); view.setColumns([0,1,2]);
+  var opts={title:'% En Producción por Máq.', width:520, height:320, legend:{position:'top',maxLines:3,textStyle:{fontSize:11}}, isStacked:'percent', vAxis:{minValue:0,ticks:[0,.25,.5,.75,1]}, colors:['#0ea5e9','#cbd5e1'], chartArea:{width:'78%',height:'62%'}};
+  new google.visualization.ColumnChart(el).draw(view, opts);
+}
+function drawTable(elemId, totalV,totalF,flowV,flowF){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=new google.visualization.DataTable();
+  data.addColumn('number','# TOTAL DÍAS-HORAS'); data.addColumn('number','TPO Flujo Prom / OT');
+  data.addRows([[{v:totalV,f:totalF},{v:flowV,f:flowF}]]);
+  new google.visualization.Table(el).draw(data,{showRowNumber:false,width:'100%',height:'100%'});
+}
+function drawBarTotal(elemId, title, rows){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=google.visualization.arrayToDataTable([['Escenario','En horas',{role:'annotation'},{role:'style'}]].concat(rows));
+  var view=new google.visualization.DataView(data);
+  view.setColumns([0,1,{calc:'stringify',sourceColumn:1,type:'string',role:'annotation'},2,3]);
+  var opts={title:title, width:540, height:360, legend:{position:'none'}, isStacked:false, hAxis:{minValue:0,ticks:[0,25,50,75,100]}, colors:['#64748b'], chartArea:{width:'72%',height:'70%'}};
+  new google.visualization.BarChart(el).draw(view, opts);
+}
+function drawColumnFlow(elemId, title, rows){
+  var el=document.getElementById(elemId); if(!el) return;
+  var data=google.visualization.arrayToDataTable([['Escenario','En horas',{role:'annotation'},{role:'style'}]].concat(rows));
+  var view=new google.visualization.DataView(data);
+  view.setColumns([0,1,{calc:'stringify',type:'string',role:'annotation'},2,3]);
+  var opts={title:title, width:540, height:360, legend:{position:'none'}, isStacked:false, vAxis:{minValue:0,ticks:[0,2.5,5,7.5]}, colors:['#0ea5e9'], chartArea:{width:'72%',height:'70%'}};
+  new google.visualization.ColumnChart(el).draw(view, opts);
+}
+
+// ---------- Dibujo por escenario ----------
+function drawScenario(esc){
+  if(esc==='E1'){
+    drawTimeline('timeline-E1',[
+      [ 'm1', 'OT1', new Date(2023, 01, 01, 07, 0, 0), new Date(2023, 01, 01, 17, 0, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 02, 30, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 01, 30, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 02, 02, 00, 0), new Date(2023, 01, 02, 12, 00, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 02, 12, 30, 0), new Date(2023, 01, 02, 19, 30, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 02, 03, 00, 0), new Date(2023, 01, 02, 09, 00, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 02, 09, 30, 0), new Date(2023, 01, 02, 16, 30, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 02, 20, 00, 0), new Date(2023, 01, 03, 04, 00, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 03, 04, 30, 0), new Date(2023, 01, 03, 13, 30, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 03, 15, 00, 0), new Date(2023, 01, 04, 01, 00, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 04, 01, 30, 0), new Date(2023, 01, 04, 12, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 04, 13, 00, 0), new Date(2023, 01, 04, 23, 00, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 03, 04, 30, 0), new Date(2023, 01, 03, 14, 30, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 04, 05, 00, 0), new Date(2023, 01, 04, 17, 00, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 04, 17, 30, 0), new Date(2023, 01, 05, 03, 30, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E1',[
+      [new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),2],[new Date(2023,01,01,17,30,0),2],[new Date(2023,01,01,17,30,0),3],[new Date(2023,01,02,02,00,0),3],[new Date(2023,01,02,02,00,0),2],[new Date(2023,01,02,03,00,0),2],[new Date(2023,01,02,03,00,0),3],[new Date(2023,01,02,09,30,0),3],[new Date(2023,01,02,09,30,0),2],[new Date(2023,01,02,16,30,0),2],[new Date(2023,01,02,16,30,0),1],[new Date(2023,01,02,20,00,0),1],[new Date(2023,01,02,20,00,0),2],[new Date(2023,01,03,04,30,0),2],[new Date(2023,01,03,04,30,0),3],[new Date(2023,01,03,13,30,0),3],[new Date(2023,01,03,13,30,0),2],[new Date(2023,01,03,15,00,0),2],[new Date(2023,01,03,15,00,0),1],[new Date(2023,01,04,01,30,0),1],[new Date(2023,01,04,01,30,0),2],[new Date(2023,01,04,05,00,0),2],[new Date(2023,01,04,05,00,0),3],[new Date(2023,01,04,13,00,0),3],[new Date(2023,01,04,13,00,0),2],[new Date(2023,01,04,23,00,0),2],[new Date(2023,01,04,23,00,0),1],[new Date(2023,01,04,23,00,0),1],[new Date(2023,01,05,03,30,0),1]
+    ]);
+    drawDonut('donut-E1','% Ocupación del Personal — E1',199,78.5);
+    drawProduction('production-E1',prodE1);
+    drawTable('table-E1',92.5,'3 Días, 20 Hs, 30 min',6.16,'6 hs, 10 min / OT');
+  }
+  if(esc==='E1_1'){
+    drawTimeline('timeline-E1_1',[
+      [ 'm1', 'OT1', new Date(2023, 01, 01, 07, 0, 0), new Date(2023, 01, 01, 17, 0, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 02, 30, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 02, 22, 00, 0), new Date(2023, 01, 03, 06, 00, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 03, 09, 30, 0), new Date(2023, 01, 03, 19, 30, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 03, 20, 00, 0), new Date(2023, 01, 04, 03, 00, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 01, 23, 30, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 02, 03, 00, 0), new Date(2023, 01, 02, 10, 00, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 03, 06, 30, 0), new Date(2023, 01, 03, 14, 30, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 03, 15, 00, 0), new Date(2023, 01, 04, 00, 00, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 01, 07, 0, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 02, 10, 30, 0), new Date(2023, 01, 02, 21, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 03, 15, 00, 0), new Date(2023, 01, 04, 01, 00, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 02, 00, 00, 0), new Date(2023, 01, 02, 10, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 02, 10, 30, 0), new Date(2023, 01, 02, 22, 30, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 02, 23, 00, 0), new Date(2023, 01, 03, 09, 00, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E1_1',[[new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),3],[new Date(2023,01,04,03,00,0),3],[new Date(2023,01,04,03,00,0),0],[new Date(2023,01,04,05,00,0),0]]);
+    drawDonut('donut-E1_1','% Ocupación — E1.1 Optimizado',199,5);
+    drawProduction('production-E1_1',prodE1_1);
+    drawTable('table-E1_1',68,'2 Días, 20 Hs',4.53,'4 hs, 32 min / OT');
+  }
+  if(esc==='E2'){
+    drawTimeline('timeline-E2',[
+      [ 'm1', 'OT1', new Date(2023, 01, 02, 16, 30, 0), new Date(2023, 01, 03, 02, 30, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 16, 00, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 04, 01, 30, 0), new Date(2023, 01, 04, 09, 30, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 03, 11, 30, 0), new Date(2023, 01, 03, 21, 30, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 03, 02, 00, 0), new Date(2023, 01, 03, 09, 00, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 01, 00, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 03, 11, 30, 0), new Date(2023, 01, 03, 18, 30, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 03, 03, 00, 0), new Date(2023, 01, 03, 11, 00, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 02, 16, 30, 0), new Date(2023, 01, 03, 01, 30, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 02, 06, 00, 0), new Date(2023, 01, 02, 16, 00, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 04, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 02, 06, 00, 0), new Date(2023, 01, 02, 16, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 05, 30, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E2',[[new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),3],[new Date(2023,01,01,16,0,0),3],[new Date(2023,01,01,16,0,0),2],[new Date(2023,01,01,17,30,0),2],[new Date(2023,01,01,17,30,0),3],[new Date(2023,01,02,04,30,0),3],[new Date(2023,01,02,04,30,0),1],[new Date(2023,01,02,06,00,0),1],[new Date(2023,01,02,06,00,0),3],[new Date(2023,01,02,16,30,0),3],[new Date(2023,01,02,16,30,0),3],[new Date(2023,01,03,02,00,0),3],[new Date(2023,01,03,09,30,0),3],[new Date(2023,01,03,09,30,0),2],[new Date(2023,01,03,11,30,0),2],[new Date(2023,01,03,19,00,0),2],[new Date(2023,01,03,19,00,0),3],[new Date(2023,01,03,22,00,0),3],[new Date(2023,01,03,22,00,0),2],[new Date(2023,01,04,09,30,0),2]]);
+    drawDonut('donut-E2','% Ocupación — E2',199,24.5);
+    drawProduction('production-E2',prodE2);
+    drawTable('table-E2',74.5,'3 Días, 2 Hs, 30 min',4.96,'4 hs, 57 min / OT');
+  }
+  if(esc==='E3'){
+    drawTimeline('timeline-E3',[
+      [ 'm1', 'OT1', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 02, 30, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 01, 30, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 02, 09, 30, 0), new Date(2023, 01, 02, 19, 30, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 02, 02, 00, 0), new Date(2023, 01, 02, 09, 00, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 03, 07, 30, 0), new Date(2023, 01, 03, 13, 30, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 02, 23, 00, 0), new Date(2023, 01, 03, 06, 00, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 02, 03, 00, 0), new Date(2023, 01, 02, 11, 00, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 02, 11, 30, 0), new Date(2023, 01, 02, 20, 30, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 03, 18, 00, 0), new Date(2023, 01, 04, 05, 00, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 04, 05, 30, 0), new Date(2023, 01, 04, 15, 30, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 02, 21, 00, 0), new Date(2023, 01, 03, 07, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 04, 05, 00, 0), new Date(2023, 01, 04, 17, 00, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 03, 07, 30, 0), new Date(2023, 01, 03, 17, 30, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E3',[[new Date(2023,01,01,07,00,0),0],[new Date(2023,01,01,07,00,0),3],[new Date(2023,01,02,02,00,0),3],[new Date(2023,01,02,02,00,0),2],[new Date(2023,01,02,03,00,0),2],[new Date(2023,01,02,03,00,0),3],[new Date(2023,01,02,11,30,0),3],[new Date(2023,01,02,11,30,0),2],[new Date(2023,01,02,20,00,0),2],[new Date(2023,01,02,20,00,0),1],[new Date(2023,01,02,21,00,0),1],[new Date(2023,01,02,21,00,0),2],[new Date(2023,01,02,23,00,0),2],[new Date(2023,01,02,23,00,0),3],[new Date(2023,01,03,06,30,0),3],[new Date(2023,01,03,06,30,0),2],[new Date(2023,01,03,07,30,0),2],[new Date(2023,01,03,07,30,0),3],[new Date(2023,01,03,14,00,0),3],[new Date(2023,01,03,14,00,0),1],[new Date(2023,01,03,18,00,0),1],[new Date(2023,01,03,18,00,0),2],[new Date(2023,01,04,16,00,0),2],[new Date(2023,01,04,16,00,0),1],[new Date(2023,01,04,17,00,0),1]]);
+    drawDonut('donut-E3','% Ocupación — E3',199,47);
+    drawProduction('production-E3',prodE3);
+    drawTable('table-E3',82,'3 Días, 10 Hs',5.46,'5 hs, 28 min / OT');
+  }
+  if(esc==='E4'){
+    drawTimeline('timeline-E4',[
+      [ 'm1', 'OT1', new Date(2023, 01, 01, 07, 0, 0), new Date(2023, 01, 02, 03, 0, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 02, 03, 30, 0), new Date(2023, 01, 02, 12, 30, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 02, 03, 30, 0), new Date(2023, 01, 02, 08, 30, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 02, 09, 00, 0), new Date(2023, 01, 02, 10, 00, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 02, 13, 00, 0), new Date(2023, 01, 02, 20, 00, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 02, 10, 30, 0), new Date(2023, 01, 02, 16, 30, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 02, 17, 00, 0), new Date(2023, 01, 03, 00, 00, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 03, 00, 30, 0), new Date(2023, 01, 03, 08, 30, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 03, 09, 00, 0), new Date(2023, 01, 03, 18, 00, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 02, 20, 30, 0), new Date(2023, 01, 03, 06, 30, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 03, 19, 30, 0), new Date(2023, 01, 04, 06, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 04, 07, 00, 0), new Date(2023, 01, 04, 17, 00, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 03, 09, 00, 0), new Date(2023, 01, 03, 19, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 04, 05, 00, 0), new Date(2023, 01, 04, 17, 00, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 04, 17, 30, 0), new Date(2023, 01, 05, 03, 30, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E4',[[new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),2],[new Date(2023,01,02,03,30,0),2],[new Date(2023,01,02,03,30,0),3],[new Date(2023,01,02,09,00,0),3],[new Date(2023,01,02,09,00,0),2],[new Date(2023,01,02,10,30,0),2],[new Date(2023,01,02,10,30,0),3],[new Date(2023,01,02,17,00,0),3],[new Date(2023,01,02,17,00,0),2],[new Date(2023,01,03,00,30,0),2],[new Date(2023,01,03,00,30,0),3],[new Date(2023,01,03,07,00,0),3],[new Date(2023,01,03,07,00,0),2],[new Date(2023,01,03,09,00,0),2],[new Date(2023,01,03,09,00,0),3],[new Date(2023,01,03,18,30,0),3],[new Date(2023,01,03,18,30,0),2],[new Date(2023,01,04,05,00,0),2],[new Date(2023,01,04,05,00,0),3],[new Date(2023,01,04,07,00,0),3],[new Date(2023,01,04,07,00,0),2],[new Date(2023,01,04,17,30,0),2],[new Date(2023,01,04,17,30,0),1],[new Date(2023,01,05,03,30,0),1]]);
+    drawDonut('donut-E4','% Ocupación — E4',204,73.5);
+    drawProduction('production-E4',prodE4);
+    drawTable('table-E4',92.5,'3 Días, 20 Hs, 30 min',6.16,'6 hs, 10 min / OT');
+  }
+  if(esc==='E5'){
+    drawTimeline('timeline-E5',[
+      [ 'm1', 'OT1', new Date(2023, 01, 03, 01, 0, 0), new Date(2023, 01, 03, 21, 0, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 16, 00, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 04, 04, 00, 0), new Date(2023, 01, 04, 09, 00, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 03, 21, 30, 0), new Date(2023, 01, 03, 22, 30, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 03, 09, 30, 0), new Date(2023, 01, 03, 16, 30, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 03, 21, 30, 0), new Date(2023, 01, 04, 03, 30, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 03, 02, 00, 0), new Date(2023, 01, 03, 09, 00, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 02, 16, 30, 0), new Date(2023, 01, 03, 00, 30, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 02, 06, 00, 0), new Date(2023, 01, 02, 15, 00, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 02, 15, 30, 0), new Date(2023, 01, 03, 01, 30, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 04, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 02, 06, 00, 0), new Date(2023, 01, 02, 16, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 01, 17, 30, 0), new Date(2023, 01, 02, 05, 30, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E5',[[new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),3],[new Date(2023,01,01,16,30,0),3],[new Date(2023,01,01,16,30,0),2],[new Date(2023,01,01,17,30,0),2],[new Date(2023,01,01,17,30,0),3],[new Date(2023,01,02,05,00,0),3],[new Date(2023,01,02,05,00,0),1],[new Date(2023,01,02,06,00,0),1],[new Date(2023,01,02,06,00,0),3],[new Date(2023,01,03,17,00,0),3],[new Date(2023,01,03,17,00,0),2],[new Date(2023,01,03,21,30,0),2],[new Date(2023,01,03,21,30,0),3],[new Date(2023,01,03,23,00,0),3],[new Date(2023,01,03,23,00,0),2],[new Date(2023,01,04,09,00,0),2]]);
+    drawDonut('donut-E5','% Ocupación — E5',204,18);
+    drawProduction('production-E5',prodE5);
+    drawTable('table-E5',74,'3 Días, 2 Hs',4.933,'4hs, 56min / OT');
+  }
+  if(esc==='E4_1'){
+    drawTimeline('timeline-E4_1',[
+      [ 'm1', 'OT1', new Date(2023, 01, 01, 07, 0, 0), new Date(2023, 01, 02, 03, 0, 0)],
+      [ 'm1', 'OT2', new Date(2023, 01, 02, 03, 30, 0), new Date(2023, 01, 02, 12, 30, 0)],
+      [ 'm2', 'OT3', new Date(2023, 01, 03, 16, 30, 0), new Date(2023, 01, 03, 21, 30, 0)],
+      [ 'm2', 'OT4', new Date(2023, 01, 03, 22, 00, 0), new Date(2023, 01, 03, 23, 00, 0)],
+      [ 'm2', 'OT5', new Date(2023, 01, 03, 23, 30, 0), new Date(2023, 01, 04, 06, 30, 0)],
+      [ 'm3', 'OT6', new Date(2023, 01, 02, 03, 30, 0), new Date(2023, 01, 02, 09, 30, 0)],
+      [ 'm3', 'OT7', new Date(2023, 01, 02, 13, 00, 0), new Date(2023, 01, 02, 20, 00, 0)],
+      [ 'm3', 'OT8', new Date(2023, 01, 03, 08, 00, 0), new Date(2023, 01, 03, 16, 00, 0)],
+      [ 'm3', 'OT9', new Date(2023, 01, 03, 22, 00, 0), new Date(2023, 01, 04, 07, 00, 0)],
+      [ 'm4', 'OT10', new Date(2023, 01, 01, 07, 00, 0), new Date(2023, 01, 01, 17, 00, 0)],
+      [ 'm4', 'OT11', new Date(2023, 01, 02, 20, 30, 0), new Date(2023, 01, 03, 07, 30, 0)],
+      [ 'm4', 'OT12', new Date(2023, 01, 03, 19, 30, 0), new Date(2023, 01, 04, 05, 30, 0)],
+      [ 'm5', 'OT13', new Date(2023, 01, 02, 10, 00, 0), new Date(2023, 01, 02, 20, 00, 0)],
+      [ 'm5', 'OT14', new Date(2023, 01, 02, 20, 30, 0), new Date(2023, 01, 03, 08, 30, 0)],
+      [ 'm5', 'OT15', new Date(2023, 01, 03, 09, 00, 0), new Date(2023, 01, 03, 19, 00, 0)],
+      [ 'm5', 'Mantenim.', new Date(2023, 01, 03, 19, 00, 0), new Date(2023, 01, 04, 05, 00, 0)]
+    ]);
+    drawPersonnelLine('personnel-E4_1',[[new Date(2023,01,01,07,0,0),0],[new Date(2023,01,01,07,0,0),3],[new Date(2023,01,01,17,30,0),3],[new Date(2023,01,01,17,30,0),2],[new Date(2023,01,02,03,30,0),2],[new Date(2023,01,02,03,30,0),3],[new Date(2023,01,04,07,00,0),3]]);
+    drawDonut('donut-E4_1','% Ocupación — E4.1 Optimizado',204,12);
+    drawProduction('production-E4_1',prodE4_1);
+    drawTable('table-E4_1',72,'3 Días, 0 Hs',4.8,'4hs, 48min / OT');
+  }
+}
+
+function drawComparativas(){
+  drawDonut('p1-donut-E1','% Ocupación — E1',199,78.5,320);
+  drawDonut('p1-donut-E2','% Ocupación — E2',199,24.5,320);
+  drawDonut('p1-donut-E3','% Ocupación — E3',199,47,320);
+  drawDonut('p1-donut-E1_1','% Ocupación — E1.1 ⭐',199,5,320);
+  drawBarTotal('p1-barchart','Total Tpo de Producción por escenario (hs) — Caso 1',[
+    ['E1',92.5,'E1',''],['E2',74.5,'E2',''],['E3',82,'E3',''],['E1.1',68,'E1.1','gold']
+  ]);
+  drawColumnFlow('p1-column','Tpo de Flujo promedio por OT (hs) — Caso 1',[
+    ['E1',6.17,'6hs 10m',''],['E2',4.97,'4hs 58m',''],['E3',5.47,'5hs 28m',''],['E1.1',4.32,'4hs 32m','gold']
+  ]);
+  drawDonut('p2-donut-E4','% Ocupación — E4',204,73.5,320);
+  drawDonut('p2-donut-E5','% Ocupación — E5',204,18,320);
+  drawDonut('p2-donut-E4_1','% Ocupación — E4.1 ⭐',204,12,320);
+  drawBarTotal('p2-barchart','Total Tpo de Producción por escenario (hs) — Caso 2',[
+    ['E4',92.5,'E4',''],['E5',74,'E5',''],['E4.1',72,'E4.1','gold']
+  ]);
+  drawColumnFlow('p2-column','Tpo de Flujo promedio por OT (hs) — Caso 2',[
+    ['E4',6.16,'6hs 10m',''],['E5',4.93,'4hs 56m',''],['E4.1',4.8,'4hs 48m','gold']
+  ]);
+}
+
+function drawVisible(){
+  const caso1Active=document.getElementById('view-caso1').classList.contains('active');
+  const caso2Active=document.getElementById('view-caso2').classList.contains('active');
+  const comparaActive=document.getElementById('view-compara').classList.contains('active');
+  if(caso1Active){
+    const active = document.querySelector('#view-caso1 .scenario.active');
+    if(active) drawScenario(active.id.replace('scenario-',''));
+  }
+  if(caso2Active){
+    const active = document.querySelector('#view-caso2 .scenario.active');
+    if(active) drawScenario(active.id.replace('scenario-',''));
+  }
+  if(comparaActive) drawComparativas();
+}
+
+google.charts.load('current', {packages:['timeline','corechart','table','line']});
+google.charts.setOnLoadCallback(()=>{
+  drawScenario('E1');
+  drawScenario('E4');
+  drawComparativas();
+  // pre-draw others for cache but hidden will be redrawn on tab click
+  drawScenario('E1_1'); drawScenario('E2'); drawScenario('E3'); drawScenario('E5'); drawScenario('E4_1');
+  setTimeout(drawVisible, 200);
+});
+window.addEventListener('resize', ()=> setTimeout(drawVisible, 150));
+</script>
+</body>
+</html>
