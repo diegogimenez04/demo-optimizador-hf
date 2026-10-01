@@ -1,3 +1,12 @@
+---
+title: Demo Optimizador HF
+emoji: ⚙️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Demo Optimizador — Grupo Investigación
 
 Demo Grupo Investigación — Optimización de Procesos Industriales (sin logo, datos sintéticos).
